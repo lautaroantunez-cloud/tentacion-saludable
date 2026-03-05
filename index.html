@@ -1,0 +1,707 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Panel Admin — Tentación Saludable</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #F4F8F2;
+    --surface: #ffffff;
+    --surface2: #EDF2EC;
+    --forest: #2D5016;
+    --forest-mid: #3A6B1F;
+    --forest-light: #7FAF60;
+    --forest-pale: #DDE8DB;
+    --accent: #5E9940;
+    --text: #1A2E10;
+    --text-soft: #4A6B35;
+    --text-muted: #8AAE70;
+    --border: #C8DBBE;
+    --red: #c0392b;
+    --orange: #d35400;
+    --gold: #b7950b;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Jost', sans-serif; background: var(--bg); color: var(--text); display: flex; min-height: 100vh; }
+
+  /* ── SIDEBAR ── */
+  .sidebar {
+    width: 220px;
+    background: var(--forest);
+    color: white;
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    top: 0; left: 0; bottom: 0;
+    z-index: 50;
+  }
+  .sidebar-logo {
+    padding: 24px 20px 20px;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+  }
+  .sidebar-logo-main { font-family: 'Playfair Display', serif; font-size: 1rem; color: white; line-height: 1.2; }
+  .sidebar-logo-sub { font-size: 0.6rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--forest-light); margin-top: 3px; }
+  .sidebar-badge { display: inline-block; background: rgba(255,255,255,0.12); font-size: 0.58rem; letter-spacing: 0.15em; text-transform: uppercase; padding: 2px 8px; border-radius: 10px; color: rgba(255,255,255,0.7); margin-top: 8px; }
+  nav { flex: 1; padding: 16px 0; }
+  .nav-section { font-size: 0.58rem; letter-spacing: 0.2em; text-transform: uppercase; color: rgba(255,255,255,0.35); padding: 12px 20px 6px; }
+  .nav-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 20px;
+    cursor: pointer;
+    font-size: 0.82rem;
+    color: rgba(255,255,255,0.7);
+    transition: all 0.15s;
+    border-left: 3px solid transparent;
+  }
+  .nav-item:hover { background: rgba(255,255,255,0.07); color: white; }
+  .nav-item.active { background: rgba(255,255,255,0.1); color: white; border-left-color: var(--forest-light); }
+  .nav-item svg { opacity: 0.7; flex-shrink: 0; }
+  .nav-item.active svg { opacity: 1; }
+  .nav-badge { margin-left: auto; background: #e74c3c; color: white; font-size: 0.6rem; font-weight: 600; padding: 1px 6px; border-radius: 10px; }
+  .sidebar-footer { padding: 16px 20px; border-top: 1px solid rgba(255,255,255,0.1); font-size: 0.72rem; color: rgba(255,255,255,0.4); }
+
+  /* ── MAIN ── */
+  .main { margin-left: 220px; flex: 1; display: flex; flex-direction: column; min-height: 100vh; }
+  .topbar {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 0 28px;
+    height: 60px;
+    display: flex; align-items: center; justify-content: space-between;
+    position: sticky; top: 0; z-index: 40;
+  }
+  .topbar-title { font-family: 'Playfair Display', serif; font-size: 1.1rem; color: var(--forest); }
+  .topbar-right { display: flex; align-items: center; gap: 12px; }
+  .topbar-store-btn {
+    display: flex; align-items: center; gap: 6px;
+    background: var(--forest-pale);
+    color: var(--forest);
+    border: none; border-radius: 8px;
+    padding: 7px 14px;
+    font-family: 'Jost', sans-serif;
+    font-size: 0.75rem; font-weight: 500;
+    cursor: pointer; transition: background 0.15s;
+  }
+  .topbar-store-btn:hover { background: var(--border); }
+  .avatar { width: 34px; height: 34px; border-radius: 50%; background: var(--forest); color: white; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: 600; }
+  .content { padding: 28px; flex: 1; }
+
+  /* ── TABS ── */
+  .page { display: none; }
+  .page.active { display: block; }
+
+  /* ── DASHBOARD ── */
+  .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 28px; }
+  .stat-card {
+    background: var(--surface);
+    border-radius: 12px;
+    padding: 18px 20px;
+    border: 1px solid var(--border);
+  }
+  .stat-label { font-size: 0.68rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 8px; }
+  .stat-val { font-family: 'Playfair Display', serif; font-size: 1.6rem; color: var(--forest); }
+  .stat-sub { font-size: 0.72rem; color: var(--text-muted); margin-top: 4px; }
+  .stat-sub.up { color: var(--accent); }
+  .stat-sub.warn { color: var(--orange); }
+
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+  .panel-card { background: var(--surface); border-radius: 12px; border: 1px solid var(--border); overflow: hidden; }
+  .panel-card-header { padding: 16px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+  .panel-card-title { font-size: 0.8rem; font-weight: 600; color: var(--text); }
+  .panel-card-action { font-size: 0.72rem; color: var(--accent); cursor: pointer; }
+
+  .order-row {
+    display: flex; align-items: center; gap: 12px;
+    padding: 12px 20px;
+    border-bottom: 1px solid var(--forest-pale);
+    cursor: pointer;
+    transition: background 0.12s;
+  }
+  .order-row:last-child { border: none; }
+  .order-row:hover { background: var(--bg); }
+  .order-num { font-size: 0.75rem; font-weight: 600; color: var(--forest); min-width: 44px; }
+  .order-info { flex: 1; }
+  .order-name { font-size: 0.82rem; font-weight: 500; }
+  .order-items { font-size: 0.7rem; color: var(--text-muted); margin-top: 1px; }
+  .order-total { font-size: 0.82rem; font-weight: 600; color: var(--forest); }
+  .status-pill { font-size: 0.62rem; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; padding: 3px 9px; border-radius: 10px; }
+  .status-pendiente { background: #fef3cd; color: #856404; }
+  .status-preparacion { background: #cce5ff; color: #004085; }
+  .status-enviado { background: #d4edda; color: #155724; }
+  .status-entregado { background: #d1ecf1; color: #0c5460; }
+
+  .stock-row {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 20px;
+    border-bottom: 1px solid var(--forest-pale);
+    font-size: 0.8rem;
+  }
+  .stock-row:last-child { border: none; }
+  .stock-name { flex: 1; }
+  .stock-qty { font-weight: 600; min-width: 36px; text-align: right; }
+  .stock-qty.low { color: var(--red); }
+  .stock-qty.ok { color: var(--accent); }
+  .stock-bar-wrap { width: 60px; height: 4px; background: var(--forest-pale); border-radius: 2px; }
+  .stock-bar { height: 100%; border-radius: 2px; }
+  .stock-bar.low { background: var(--red); }
+  .stock-bar.ok { background: var(--accent); }
+
+  /* ── PRODUCTS PAGE ── */
+  .page-toolbar {
+    display: flex; align-items: center; gap: 12px;
+    margin-bottom: 20px;
+  }
+  .search-box {
+    flex: 1; max-width: 300px;
+    display: flex; align-items: center; gap: 8px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 8px 12px;
+  }
+  .search-box input { border: none; outline: none; font-family: 'Jost', sans-serif; font-size: 0.82rem; color: var(--text); background: transparent; flex: 1; }
+  .filter-select {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
+    padding: 8px 12px; font-family: 'Jost', sans-serif; font-size: 0.8rem; color: var(--text);
+    outline: none; cursor: pointer;
+  }
+
+  .products-table { background: var(--surface); border-radius: 12px; border: 1px solid var(--border); overflow: hidden; }
+  .table-head { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 1fr 80px; gap: 0; background: var(--forest-pale); }
+  .th { padding: 10px 16px; font-size: 0.65rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-soft); font-weight: 600; }
+  .product-row { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 1fr 80px; align-items: center; border-bottom: 1px solid var(--forest-pale); transition: background 0.12s; cursor: pointer; }
+  .product-row:last-child { border: none; }
+  .product-row:hover { background: var(--bg); }
+  .td { padding: 12px 16px; font-size: 0.82rem; }
+  .prod-name-cell { display: flex; align-items: center; gap: 10px; }
+  .prod-icon { width: 34px; height: 34px; background: var(--forest-pale); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; flex-shrink: 0; }
+  .prod-name { font-weight: 500; line-height: 1.2; }
+  .prod-cat { font-size: 0.68rem; color: var(--text-muted); }
+  .price-cell { font-weight: 600; color: var(--forest); }
+  .toggle-switch { position: relative; width: 36px; height: 20px; }
+  .toggle-switch input { opacity: 0; width: 0; height: 0; }
+  .toggle-track { position: absolute; inset: 0; background: var(--border); border-radius: 10px; cursor: pointer; transition: background 0.2s; }
+  .toggle-track::after { content: ''; position: absolute; left: 3px; top: 3px; width: 14px; height: 14px; background: white; border-radius: 50%; transition: transform 0.2s; }
+  input:checked + .toggle-track { background: var(--accent); }
+  input:checked + .toggle-track::after { transform: translateX(16px); }
+  .edit-btn { background: none; border: 1px solid var(--border); border-radius: 6px; padding: 5px 10px; font-family: 'Jost', sans-serif; font-size: 0.72rem; color: var(--text-soft); cursor: pointer; transition: all 0.12s; }
+  .edit-btn:hover { border-color: var(--forest); color: var(--forest); background: var(--forest-pale); }
+
+  /* ── EDIT MODAL ── */
+  .edit-overlay {
+    position: fixed; inset: 0;
+    background: rgba(26,46,16,0.5);
+    z-index: 200;
+    display: flex; align-items: center; justify-content: center;
+    opacity: 0; pointer-events: none;
+    transition: opacity 0.2s;
+    backdrop-filter: blur(3px);
+  }
+  .edit-overlay.open { opacity: 1; pointer-events: all; }
+  .edit-modal {
+    background: var(--surface);
+    border-radius: 16px;
+    width: 460px;
+    max-width: 95vw;
+    padding: 28px;
+    transform: scale(0.96) translateY(8px);
+    transition: transform 0.25s cubic-bezier(0.34,1.2,0.64,1);
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+  .edit-overlay.open .edit-modal { transform: scale(1) translateY(0); }
+  .edit-modal-header { display: flex; align-items: center; gap: 12px; margin-bottom: 24px; }
+  .edit-modal-icon { width: 46px; height: 46px; background: var(--forest-pale); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; flex-shrink: 0; }
+  .edit-modal-title { font-family: 'Playfair Display', serif; font-size: 1.2rem; color: var(--forest); line-height: 1.2; }
+  .edit-modal-cat { font-size: 0.68rem; color: var(--text-muted); margin-top: 2px; }
+  .edit-close { margin-left: auto; background: none; border: none; cursor: pointer; color: var(--text-muted); font-size: 1.1rem; padding: 4px; }
+  .edit-close:hover { color: var(--text); }
+  .edit-section-label { font-size: 0.65rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--text-muted); font-weight: 600; margin-bottom: 12px; }
+  .variants-edit { display: flex; flex-direction: column; gap: 10px; margin-bottom: 24px; }
+  .variant-edit-row {
+    display: flex; align-items: center; gap: 12px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 14px;
+    transition: border-color 0.15s;
+  }
+  .variant-edit-row:focus-within { border-color: var(--forest-mid); }
+  .variant-size-label { font-size: 0.8rem; font-weight: 600; min-width: 44px; color: var(--text); }
+  .variant-price-input {
+    flex: 1;
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    padding: 9px 12px;
+    font-family: 'Jost', sans-serif;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--forest);
+    outline: none;
+    transition: border-color 0.15s;
+    text-align: right;
+  }
+  .variant-price-input:focus { border-color: var(--forest-mid); }
+  .peso-label { font-size: 0.75rem; color: var(--text-muted); }
+  .edit-toggle-row { display: flex; align-items: center; justify-content: space-between; background: var(--bg); border-radius: 10px; padding: 14px; margin-bottom: 24px; }
+  .edit-toggle-label { font-size: 0.82rem; font-weight: 500; }
+  .edit-toggle-sub { font-size: 0.7rem; color: var(--text-muted); margin-top: 2px; }
+  .edit-actions { display: flex; gap: 10px; }
+  .btn-save {
+    flex: 1; background: var(--forest); color: white; border: none; border-radius: 10px;
+    padding: 13px; font-family: 'Jost', sans-serif; font-size: 0.85rem; font-weight: 500;
+    cursor: pointer; transition: background 0.15s; letter-spacing: 0.03em;
+  }
+  .btn-save:hover { background: var(--forest-mid); }
+  .btn-cancel { background: var(--bg); color: var(--text-soft); border: 1px solid var(--border); border-radius: 10px; padding: 13px 20px; font-family: 'Jost', sans-serif; font-size: 0.85rem; cursor: pointer; transition: background 0.15s; }
+  .btn-cancel:hover { background: var(--border); }
+
+  /* ── ORDERS PAGE ── */
+  .orders-list { background: var(--surface); border-radius: 12px; border: 1px solid var(--border); overflow: hidden; }
+  .order-detail-row {
+    display: grid; grid-template-columns: 60px 1fr 1fr 120px 120px 100px;
+    align-items: center; padding: 14px 20px;
+    border-bottom: 1px solid var(--forest-pale);
+    cursor: pointer; transition: background 0.12s; font-size: 0.82rem;
+  }
+  .order-detail-row:hover { background: var(--bg); }
+  .order-detail-row:last-child { border: none; }
+  .order-detail-row.head { background: var(--forest-pale); font-size: 0.65rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-soft); font-weight: 600; cursor: default; }
+  .order-detail-row.head:hover { background: var(--forest-pale); }
+  .status-select {
+    background: transparent; border: none; font-family: 'Jost', sans-serif;
+    font-size: 0.75rem; font-weight: 600; cursor: pointer; outline: none;
+    padding: 4px 8px; border-radius: 8px;
+  }
+
+  /* ── STOCK PAGE ── */
+  .stock-table { background: var(--surface); border-radius: 12px; border: 1px solid var(--border); overflow: hidden; }
+  .stock-detail-row {
+    display: grid; grid-template-columns: 2fr 80px 100px 120px 1fr;
+    align-items: center; padding: 12px 20px;
+    border-bottom: 1px solid var(--forest-pale);
+    font-size: 0.82rem;
+  }
+  .stock-detail-row:last-child { border: none; }
+  .stock-detail-row.head { background: var(--forest-pale); font-size: 0.65rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-soft); font-weight: 600; }
+  .stock-input { width: 70px; background: var(--bg); border: 1px solid var(--border); border-radius: 6px; padding: 6px 8px; font-family: 'Jost', sans-serif; font-size: 0.82rem; text-align: center; outline: none; }
+  .stock-input:focus { border-color: var(--forest); }
+  .btn-add-stock { background: var(--forest-pale); color: var(--forest); border: none; border-radius: 6px; padding: 6px 12px; font-family: 'Jost', sans-serif; font-size: 0.75rem; font-weight: 500; cursor: pointer; transition: background 0.12s; }
+  .btn-add-stock:hover { background: var(--border); }
+
+  /* ── TOAST ── */
+  .toast { position: fixed; bottom: 24px; right: 24px; background: var(--forest); color: white; padding: 12px 20px; border-radius: 10px; font-size: 0.82rem; font-weight: 500; z-index: 999; transform: translateY(60px); opacity: 0; transition: all 0.3s cubic-bezier(0.34,1.2,0.64,1); box-shadow: 0 6px 20px rgba(0,0,0,0.15); }
+  .toast.show { transform: translateY(0); opacity: 1; }
+
+  @media (max-width: 768px) {
+    .sidebar { width: 60px; }
+    .sidebar-logo, .nav-section, .nav-item span, .sidebar-footer { display: none; }
+    .main { margin-left: 60px; }
+    .stats-grid { grid-template-columns: repeat(2,1fr); }
+    .two-col { grid-template-columns: 1fr; }
+    .table-head, .product-row { grid-template-columns: 1fr 1fr 60px; }
+    .th:nth-child(2), .th:nth-child(3), .th:nth-child(4), .td:nth-child(2), .td:nth-child(3), .td:nth-child(4) { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="sidebar-logo-main">Tentación<br>Saludable</div>
+    <div class="sidebar-logo-sub">Dietética</div>
+    <div class="sidebar-badge">Panel Admin</div>
+  </div>
+  <nav>
+    <div class="nav-section">Principal</div>
+    <div class="nav-item active" onclick="showPage('dashboard',this)">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+      <span>Inicio</span>
+    </div>
+    <div class="nav-item" onclick="showPage('orders',this)">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/></svg>
+      <span>Pedidos</span>
+      <span class="nav-badge">3</span>
+    </div>
+    <div class="nav-section">Catálogo</div>
+    <div class="nav-item" onclick="showPage('products',this)">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
+      <span>Productos</span>
+    </div>
+    <div class="nav-item" onclick="showPage('stock',this)">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+      <span>Stock</span>
+    </div>
+  </nav>
+  <div class="sidebar-footer">v1.0 · 2026</div>
+</aside>
+
+<!-- MAIN -->
+<div class="main">
+  <div class="topbar">
+    <div class="topbar-title" id="topbarTitle">Inicio</div>
+    <div class="topbar-right">
+      <button class="topbar-store-btn">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+        Ver tienda
+      </button>
+      <div class="avatar">TS</div>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- DASHBOARD -->
+    <div class="page active" id="page-dashboard">
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-label">Pedidos hoy</div>
+          <div class="stat-val">7</div>
+          <div class="stat-sub up">↑ 3 más que ayer</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Facturado hoy</div>
+          <div class="stat-val">$84.200</div>
+          <div class="stat-sub up">↑ buen día</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Pendientes</div>
+          <div class="stat-val">3</div>
+          <div class="stat-sub warn">Requieren atención</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Stock bajo</div>
+          <div class="stat-val">4</div>
+          <div class="stat-sub warn">Productos a reponer</div>
+        </div>
+      </div>
+      <div class="two-col">
+        <div class="panel-card">
+          <div class="panel-card-header">
+            <span class="panel-card-title">Pedidos recientes</span>
+            <span class="panel-card-action" onclick="showPage('orders', document.querySelector('.nav-item:nth-child(3)'))">Ver todos →</span>
+          </div>
+          <div class="order-row">
+            <div class="order-num">#024</div>
+            <div class="order-info"><div class="order-name">María Gonzalez</div><div class="order-items">Chía 500g · Almendras 250g · Avena 1kg</div></div>
+            <div class="order-total">$18.500</div>
+            <span class="status-pill status-pendiente">Pendiente</span>
+          </div>
+          <div class="order-row">
+            <div class="order-num">#023</div>
+            <div class="order-info"><div class="order-name">Lucas Pérez</div><div class="order-items">Mix Europeo 500g · Pistachos 100g</div></div>
+            <div class="order-total">$20.000</div>
+            <span class="status-pill status-preparacion">Preparación</span>
+          </div>
+          <div class="order-row">
+            <div class="order-num">#022</div>
+            <div class="order-info"><div class="order-name">Ana Rodríguez</div><div class="order-items">Granola Mandala 250g · Chía 250g</div></div>
+            <div class="order-total">$6.900</div>
+            <span class="status-pill status-enviado">Enviado</span>
+          </div>
+          <div class="order-row">
+            <div class="order-num">#021</div>
+            <div class="order-info"><div class="order-name">Carolina Sosa</div><div class="order-items">Eritritol 500g · Harina Almendra 500g</div></div>
+            <div class="order-total">$16.900</div>
+            <span class="status-pill status-entregado">Entregado</span>
+          </div>
+        </div>
+        <div class="panel-card">
+          <div class="panel-card-header">
+            <span class="panel-card-title">Stock bajo</span>
+            <span class="panel-card-action" onclick="showPage('stock', document.querySelector('.nav-item:nth-child(6)'))">Cargar stock →</span>
+          </div>
+          <div class="stock-row">
+            <span class="stock-name">Pistachos 100g</span>
+            <div class="stock-bar-wrap"><div class="stock-bar low" style="width:15%"></div></div>
+            <span class="stock-qty low">2 u</span>
+          </div>
+          <div class="stock-row">
+            <span class="stock-name">Almendras Guara 500g</span>
+            <div class="stock-bar-wrap"><div class="stock-bar low" style="width:20%"></div></div>
+            <span class="stock-qty low">3 u</span>
+          </div>
+          <div class="stock-row">
+            <span class="stock-name">Eritritol 1kg</span>
+            <div class="stock-bar-wrap"><div class="stock-bar low" style="width:25%"></div></div>
+            <span class="stock-qty low">4 u</span>
+          </div>
+          <div class="stock-row">
+            <span class="stock-name">Chía 1kg</span>
+            <div class="stock-bar-wrap"><div class="stock-bar ok" style="width:55%"></div></div>
+            <span class="stock-qty ok">8 u</span>
+          </div>
+          <div class="stock-row">
+            <span class="stock-name">Harina Almendra 500g</span>
+            <div class="stock-bar-wrap"><div class="stock-bar ok" style="width:70%"></div></div>
+            <span class="stock-qty ok">12 u</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PRODUCTS PAGE -->
+    <div class="page" id="page-products">
+      <div class="page-toolbar">
+        <div class="search-box">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#8AAE70" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          <input type="text" placeholder="Buscar producto...">
+        </div>
+        <select class="filter-select">
+          <option>Todas las categorías</option>
+          <option>Frutos Secos</option>
+          <option>Semillas</option>
+          <option>Harinas</option>
+          <option>Cereales y Granolas</option>
+          <option>Fraccionados</option>
+        </select>
+      </div>
+      <div class="products-table">
+        <div class="table-head">
+          <div class="th">Producto</div>
+          <div class="th">Categoría</div>
+          <div class="th">Desde</div>
+          <div class="th">Hasta</div>
+          <div class="th">Activo</div>
+          <div class="th"></div>
+        </div>
+        <div id="productsBody"></div>
+      </div>
+    </div>
+
+    <!-- ORDERS PAGE -->
+    <div class="page" id="page-orders">
+      <div class="page-toolbar">
+        <div class="search-box">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#8AAE70" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          <input type="text" placeholder="Buscar por nombre o número...">
+        </div>
+        <select class="filter-select">
+          <option>Todos los estados</option>
+          <option>Pendiente</option>
+          <option>En preparación</option>
+          <option>Enviado</option>
+          <option>Entregado</option>
+        </select>
+      </div>
+      <div class="orders-list">
+        <div class="order-detail-row head">
+          <div>#</div><div>Cliente</div><div>Productos</div><div>Total</div><div>Estado</div><div>Fecha</div>
+        </div>
+        <div class="order-detail-row">
+          <div style="font-weight:600;color:var(--forest)">#024</div>
+          <div><div style="font-weight:500">María Gonzalez</div><div style="font-size:0.7rem;color:var(--text-muted)">341 555-1234</div></div>
+          <div style="font-size:0.75rem;color:var(--text-soft)">Chía 500g · Almendras 250g · Avena 1kg</div>
+          <div style="font-weight:600;color:var(--forest)">$18.500</div>
+          <div><select class="status-select status-pendiente" onchange="this.className='status-select status-'+this.value.toLowerCase().replace(' ','-')"><option>pendiente</option><option>preparacion</option><option>enviado</option><option>entregado</option></select></div>
+          <div style="font-size:0.75rem;color:var(--text-muted)">hoy 10:34</div>
+        </div>
+        <div class="order-detail-row">
+          <div style="font-weight:600;color:var(--forest)">#023</div>
+          <div><div style="font-weight:500">Lucas Pérez</div><div style="font-size:0.7rem;color:var(--text-muted)">341 555-5678</div></div>
+          <div style="font-size:0.75rem;color:var(--text-soft)">Mix Europeo 500g · Pistachos 100g</div>
+          <div style="font-weight:600;color:var(--forest)">$20.000</div>
+          <div><select class="status-select status-preparacion"><option>pendiente</option><option selected>preparacion</option><option>enviado</option><option>entregado</option></select></div>
+          <div style="font-size:0.75rem;color:var(--text-muted)">hoy 09:12</div>
+        </div>
+        <div class="order-detail-row">
+          <div style="font-weight:600;color:var(--forest)">#022</div>
+          <div><div style="font-weight:500">Ana Rodríguez</div><div style="font-size:0.7rem;color:var(--text-muted)">341 555-9012</div></div>
+          <div style="font-size:0.75rem;color:var(--text-soft)">Granola Mandala 250g · Chía 250g</div>
+          <div style="font-weight:600;color:var(--forest)">$6.900</div>
+          <div><select class="status-select status-enviado"><option>pendiente</option><option>preparacion</option><option selected>enviado</option><option>entregado</option></select></div>
+          <div style="font-size:0.75rem;color:var(--text-muted)">ayer 16:50</div>
+        </div>
+        <div class="order-detail-row">
+          <div style="font-weight:600;color:var(--forest)">#021</div>
+          <div><div style="font-weight:500">Carolina Sosa</div><div style="font-size:0.7rem;color:var(--text-muted)">341 555-3456</div></div>
+          <div style="font-size:0.75rem;color:var(--text-soft)">Eritritol 500g · Harina Almendra 500g</div>
+          <div style="font-weight:600;color:var(--forest)">$16.900</div>
+          <div><select class="status-select status-entregado"><option>pendiente</option><option>preparacion</option><option>enviado</option><option selected>entregado</option></select></div>
+          <div style="font-size:0.75rem;color:var(--text-muted)">ayer 11:20</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- STOCK PAGE -->
+    <div class="page" id="page-stock">
+      <div class="page-toolbar">
+        <div class="search-box">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#8AAE70" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          <input type="text" placeholder="Buscar producto...">
+        </div>
+      </div>
+      <div class="stock-table">
+        <div class="stock-detail-row head">
+          <div>Producto / Presentación</div>
+          <div>Stock actual</div>
+          <div>Agregar unidades</div>
+          <div></div>
+          <div>Última entrada</div>
+        </div>
+        <div class="stock-detail-row">
+          <div><div style="font-weight:500">Almendras Guara</div><div style="font-size:0.7rem;color:var(--text-muted)">250g</div></div>
+          <div style="font-weight:600;color:var(--accent)">18</div>
+          <div><input class="stock-input" type="number" value="0" min="0"></div>
+          <div><button class="btn-add-stock" onclick="showToast('✅ Stock actualizado')">Cargar</button></div>
+          <div style="font-size:0.72rem;color:var(--text-muted)">hace 2 días</div>
+        </div>
+        <div class="stock-detail-row">
+          <div><div style="font-weight:500">Almendras Guara</div><div style="font-size:0.7rem;color:var(--text-muted)">500g</div></div>
+          <div style="font-weight:600;color:var(--red)">3</div>
+          <div><input class="stock-input" type="number" value="0" min="0"></div>
+          <div><button class="btn-add-stock" onclick="showToast('✅ Stock actualizado')">Cargar</button></div>
+          <div style="font-size:0.72rem;color:var(--text-muted)">hace 5 días</div>
+        </div>
+        <div class="stock-detail-row">
+          <div><div style="font-weight:500">Chía</div><div style="font-size:0.7rem;color:var(--text-muted)">1kg</div></div>
+          <div style="font-weight:600;color:var(--red)">8</div>
+          <div><input class="stock-input" type="number" value="0" min="0"></div>
+          <div><button class="btn-add-stock" onclick="showToast('✅ Stock actualizado')">Cargar</button></div>
+          <div style="font-size:0.72rem;color:var(--text-muted)">hace 3 días</div>
+        </div>
+        <div class="stock-detail-row">
+          <div><div style="font-weight:500">Pistachos</div><div style="font-size:0.7rem;color:var(--text-muted)">100g</div></div>
+          <div style="font-weight:600;color:var(--red)">2</div>
+          <div><input class="stock-input" type="number" value="0" min="0"></div>
+          <div><button class="btn-add-stock" onclick="showToast('✅ Stock actualizado')">Cargar</button></div>
+          <div style="font-size:0.72rem;color:var(--text-muted)">hace 7 días</div>
+        </div>
+        <div class="stock-detail-row">
+          <div><div style="font-weight:500">Eritritol</div><div style="font-size:0.7rem;color:var(--text-muted)">1kg</div></div>
+          <div style="font-weight:600;color:var(--red)">4</div>
+          <div><input class="stock-input" type="number" value="0" min="0"></div>
+          <div><button class="btn-add-stock" onclick="showToast('✅ Stock actualizado')">Cargar</button></div>
+          <div style="font-size:0.72rem;color:var(--text-muted)">hace 4 días</div>
+        </div>
+        <div class="stock-detail-row">
+          <div><div style="font-weight:500">Granola Mandala Choco</div><div style="font-size:0.7rem;color:var(--text-muted)">250g</div></div>
+          <div style="font-weight:600;color:var(--accent)">22</div>
+          <div><input class="stock-input" type="number" value="0" min="0"></div>
+          <div><button class="btn-add-stock" onclick="showToast('✅ Stock actualizado')">Cargar</button></div>
+          <div style="font-size:0.72rem;color:var(--text-muted)">hoy</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- EDIT PRICE MODAL -->
+<div class="edit-overlay" id="editOverlay" onclick="if(event.target===this)closeEdit()">
+  <div class="edit-modal">
+    <div class="edit-modal-header">
+      <div class="edit-modal-icon" id="editIcon"></div>
+      <div>
+        <div class="edit-modal-title" id="editName"></div>
+        <div class="edit-modal-cat" id="editCat"></div>
+      </div>
+      <button class="edit-close" onclick="closeEdit()">✕</button>
+    </div>
+    <div class="edit-section-label">Precios por presentación</div>
+    <div class="variants-edit" id="variantsEdit"></div>
+    <div class="edit-toggle-row">
+      <div>
+        <div class="edit-toggle-label">Producto activo</div>
+        <div class="edit-toggle-sub">Visible en la tienda</div>
+      </div>
+      <label class="toggle-switch"><input type="checkbox" checked><span class="toggle-track"></span></label>
+    </div>
+    <div class="edit-actions">
+      <button class="btn-cancel" onclick="closeEdit()">Cancelar</button>
+      <button class="btn-save" onclick="saveProduct()">Guardar cambios</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const products = [
+  {icon:'🥜',name:'Almendras Guara',cat:'Frutos Secos',active:true,variants:[{size:'100g',price:2700},{size:'250g',price:6600},{size:'500g',price:12500},{size:'1kg',price:23500}]},
+  {icon:'🌰',name:'Castañas de Cajú W4',cat:'Frutos Secos',active:true,variants:[{size:'100g',price:2300},{size:'250g',price:5600},{size:'500g',price:10500},{size:'1kg',price:20000}]},
+  {icon:'💚',name:'Pistachos',cat:'Frutos Secos',active:true,variants:[{size:'100g',price:4500},{size:'250g',price:11000},{size:'500g',price:22000},{size:'1kg',price:42000}]},
+  {icon:'🌱',name:'Chía',cat:'Semillas',active:true,variants:[{size:'100g',price:1000},{size:'250g',price:2300},{size:'500g',price:4450},{size:'1kg',price:8800}]},
+  {icon:'🌻',name:'Girasol',cat:'Semillas',active:true,variants:[{size:'100g',price:500},{size:'250g',price:1100},{size:'500g',price:2200},{size:'1kg',price:4300}]},
+  {icon:'🌿',name:'Quinoa',cat:'Semillas',active:true,variants:[{size:'100g',price:1300},{size:'250g',price:3000},{size:'500g',price:5850},{size:'1kg',price:11500}]},
+  {icon:'🌾',name:'Avena',cat:'Cereales y Granolas',active:true,variants:[{size:'250g',price:700},{size:'500g',price:1200},{size:'1kg',price:2200}]},
+  {icon:'🍫',name:'Granola con Chocolate',cat:'Cereales y Granolas',active:true,variants:[{size:'100g',price:1900},{size:'250g',price:4600},{size:'500g',price:9000},{size:'1kg',price:17500}]},
+  {icon:'⚪',name:'Harina de Almendra',cat:'Harinas',active:true,variants:[{size:'500g',price:3200},{size:'1kg',price:6200}]},
+  {icon:'🥥',name:'Harina de Coco',cat:'Harinas',active:false,variants:[{size:'500g',price:4500},{size:'1kg',price:8800}]},
+  {icon:'🍬',name:'Eritritol',cat:'Azúcares',active:true,variants:[{size:'100g',price:2900},{size:'250g',price:7000},{size:'500g',price:13700},{size:'1kg',price:26900}]},
+  {icon:'🍫',name:'Cacao en Polvo',cat:'Fraccionados',active:true,variants:[{size:'100g',price:2300},{size:'250g',price:5600},{size:'500g',price:11000},{size:'1kg',price:21500}]},
+];
+
+const fmt = p => '$' + Number(p).toLocaleString('es-AR');
+
+function renderProducts() {
+  const body = document.getElementById('productsBody');
+  body.innerHTML = products.map((p,i) => `
+    <div class="product-row" onclick="openEdit(${i})">
+      <div class="td"><div class="prod-name-cell"><div class="prod-icon">${p.icon}</div><div><div class="prod-name">${p.name}</div><div class="prod-cat">${p.variants.length} presentaciones</div></div></div></div>
+      <div class="td" style="color:var(--text-soft);font-size:0.78rem">${p.cat}</div>
+      <div class="td price-cell">${fmt(Math.min(...p.variants.map(v=>v.price)))}</div>
+      <div class="td price-cell">${fmt(Math.max(...p.variants.map(v=>v.price)))}</div>
+      <div class="td" onclick="event.stopPropagation()">
+        <label class="toggle-switch"><input type="checkbox" ${p.active?'checked':''} onchange="products[${i}].active=this.checked"><span class="toggle-track"></span></label>
+      </div>
+      <div class="td"><button class="edit-btn" onclick="event.stopPropagation();openEdit(${i})">Editar</button></div>
+    </div>`).join('');
+}
+
+let editIdx = null;
+function openEdit(idx) {
+  editIdx = idx;
+  const p = products[idx];
+  document.getElementById('editIcon').textContent = p.icon;
+  document.getElementById('editName').textContent = p.name;
+  document.getElementById('editCat').textContent = p.cat;
+  document.getElementById('variantsEdit').innerHTML = p.variants.map((v,i) => `
+    <div class="variant-edit-row">
+      <span class="variant-size-label">${v.size}</span>
+      <span class="peso-label">$</span>
+      <input class="variant-price-input" type="number" value="${v.price}" id="vp_${i}" min="0">
+    </div>`).join('');
+  document.getElementById('editOverlay').classList.add('open');
+}
+
+function closeEdit() {
+  document.getElementById('editOverlay').classList.remove('open');
+}
+
+function saveProduct() {
+  const p = products[editIdx];
+  p.variants.forEach((v,i) => {
+    const val = parseInt(document.getElementById('vp_'+i).value);
+    if (!isNaN(val) && val > 0) v.price = val;
+  });
+  renderProducts();
+  closeEdit();
+  showToast('✅ Precios actualizados en la tienda');
+}
+
+function showPage(id, el) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  if(el) el.classList.add('active');
+  const titles = {dashboard:'Inicio',products:'Productos',orders:'Pedidos',stock:'Stock'};
+  document.getElementById('topbarTitle').textContent = titles[id] || id;
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+renderProducts();
+</script>
+</body>
+</html>
